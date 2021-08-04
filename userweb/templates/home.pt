@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>User Overview: ${uid}</title>
+</head>
+<body>
+<div metal:use-macro='load:nav.pt'></div>
+
+<div>
+<h1>${uid}</h1>
+    <a href="${request.route_url('change_password',uid=uid)}">change password</a>
+</div>
+<div>
+<a tal:condition="permission['user']" href="${request.route_url('add_guest')}">Add Guest User</a>
+<a tal:condition="permission['admin']" href="${request.route_url('add_user')}">Add User</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>${title}</title>
+</head>
+<body>
+<div metal:use-macro='load:nav.pt'></div>
+<h1>${title}</h1>
+<span tal:replace="message"/>
+
+<form action="${url}" method="post">
+    <input type="hidden" name="came_from"
+           value="${came_from}"/>
+    <label for="new_password">New Password</label>
+    <input type="password" id="new_password"
+           name="new_password"
+           value="${new_password}"/><br/>
+    <label for="confirm_password">Confirm Password</label>
+    <input type="password" id="confirm_password"
+           name="confirm_password"
+           value="${confirm_password}"/><br/>
+
+    <label for="auth_password">Authentication Password</label>
+    <input type="password" id="auth_password"
+           name="auth_password"
+           value="${auth_password}"/><br/>
+    <input type="submit" name="form.submitted"
+           value="Change Password"/>
+</form>
+</body>
+</html>

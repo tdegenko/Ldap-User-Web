@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>${name}</title>
+</head>
+<body>
+<div metal:use-macro='load:nav.pt'></div>
+
+<h1>${name}:</h1>
+<ul>
+<li tal:repeat="user users">
+    <span tal:replace="user.uid" />
+    <a href="${request.route_url('reset_password',uid=user.uid)}">reset password</a>
+    <a tal:condition="permission['admin']" href="${request.route_url('remove_user',uid=user.uid)}">remove</a>
+    <a tal:condition="permission['admin']" href="${request.route_url('change_groups',uid=user.uid)}">change groups</a>
+</li>
+</ul>
+</body>
+</html>
