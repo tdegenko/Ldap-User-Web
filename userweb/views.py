@@ -93,7 +93,6 @@ class UserwebViews:
             name = 'Add Guest'
 
         add_url = request.url
-        print(add_url)
         referrer = request.url
         if referrer == add_url:
             referrer = '/'  # never use login form itself as came_from
@@ -102,6 +101,7 @@ class UserwebViews:
         user_name = None
         user_password = None
         auth_password = None
+        message = None
         if 'form.submitted' in request.params:
             if adding_full_user:
                 primary_group = conn.Group(gid=request.params['user_primary_group'])
@@ -113,12 +113,17 @@ class UserwebViews:
             full_name = request.params['user_name']
             user_password = request.params['user_password']
             if conn.User(request.authenticated_userid, request.params['auth_password']).authenticate():
-                new_user = usermanagement.user.User.add(conn, uid, full_name, user_password, primary_group, secondary_groups)
-                message = "Password for %(uid)s reset" % {'uid':uid}
+                try:
+                    new_user = usermanagement.user.User.add(conn, uid, full_name, user_password, primary_group, secondary_groups)
+                    message = "%(uid)s added" % {'uid':uid}
+                    added = True
+                except usermanagement.ldap.INSUFFICIENT_ACCESS as e:
+                    message = "Insufficient Permissions"
             else:
-                message = "Failed Authentication or Insufficent Permissions"
+                message = "Authentication Failed"
         return {
             'name': name,
+            'message': message,
             'groups': groups,
             'added': added,
             'url': add_url,

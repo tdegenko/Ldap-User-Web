@@ -7,8 +7,9 @@
 <div metal:use-macro='load:nav.pt'></div>
 
 <h1>${name}:</h1>
+<div>${message}</div>
 
-<form tal:condition="added== False" action="${url}" method="post">
+<form tal:condition="added==False" action="${url}" method="post">
     <label for="user_id">Login ID</label>
     <input type="user" id="user_id"
            name="user_id"
