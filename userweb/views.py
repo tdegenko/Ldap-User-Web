@@ -66,18 +66,31 @@ class UserwebViews:
         }
 
     @view_config(route_name='guests', renderer='templates/users.pt', permission='user')
+    @view_config(route_name='users', renderer='templates/users.pt', permission='admin')
     def guests(self):
         conn = self.request.registry.settings['ldap.server'].connect()
-        users = usermanagement.group.Group.Guests(conn).get_users()
+        users = []
+        if self.request.matched_route.name == 'users':
+            users = usermanagement.group.Group.Users(conn).get_users()
+            name = 'Users'
+        else:
+            users = usermanagement.group.Group.Guests(conn).get_users()
+            name = 'Guests'
+        user_sort = lambda x: x.uid
         return {
-            'name':'Guests',
-            'users': users,
+            'name': name,
+            'users': sorted(users, key=user_sort),
             'permission': self.permission(),
         }
 
-    def _system_add_user(self):
-        pass
-        
+    def _system_add_user(self, uid, full_name, user_password, primary_group, secondary_groups):
+        settings = self.request.registry.settings
+        with settings['ldap.server'].connect(settings['ldap.user'], settings['ldap.password']) as conn:
+            print(conn.user.uid)
+            if primary_group is None:
+                primary_group = usermanagement.group.Group.Guests(conn)
+            secondary_groups = [conn.Group(gid=x) for x in secondary_groups]
+            new_user = usermanagement.user.User.add(conn, uid, full_name, user_password, primary_group, secondary_groups)
 
     @view_config(route_name='add_guest', renderer='templates/add_user.pt', permission='user')
     @view_config(route_name='add_user', renderer='templates/add_user.pt', permission='admin')
@@ -105,20 +118,17 @@ class UserwebViews:
         if 'form.submitted' in request.params:
             if adding_full_user:
                 primary_group = conn.Group(gid=request.params['user_primary_group'])
-                secondary_groups = [conn.Group(gid=x) for x in request.params.getall('user_secondary_groups')]
+                secondary_groups = request.params.getall('user_secondary_groups')
             else:
-                primary_group = usermanagement.group.Group.Guests(conn)
+                primary_group = None
                 secondary_groups = []
             uid = request.params['user_id']
             full_name = request.params['user_name']
             user_password = request.params['user_password']
             if conn.User(request.authenticated_userid, request.params['auth_password']).authenticate():
-                try:
-                    new_user = usermanagement.user.User.add(conn, uid, full_name, user_password, primary_group, secondary_groups)
-                    message = "%(uid)s added" % {'uid':uid}
-                    added = True
-                except usermanagement.ldap.INSUFFICIENT_ACCESS as e:
-                    message = "Insufficient Permissions"
+                new_user = self._system_add_user(uid, full_name, user_password, primary_group, secondary_groups)
+                message = "%(uid)s added" % {'uid':uid}
+                added = True
             else:
                 message = "Authentication Failed"
         return {
@@ -135,17 +145,6 @@ class UserwebViews:
         }
 
     
-    
-    @view_config(route_name='users', renderer='templates/users.pt', permission='admin')
-    def users(self):
-        conn = self.request.registry.settings['ldap.server'].connect()
-        users = usermanagement.group.Group.Users(conn).get_users()
-        return {
-            'name':'Users',
-            'users': users,
-            'permission': self.permission(),
-        }
-
     @view_config(route_name='change_password', renderer='templates/change_pw.pt', permission='authed')
     def change_pw(self):
         uid = self.request.authenticated_userid
