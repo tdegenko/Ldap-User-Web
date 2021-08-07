@@ -48,13 +48,12 @@ class UserwebViews:
         if 'form.submitted' in request.params:
             login = request.params['login']
             password = request.params['password']
-            conn = request.registry.settings['ldap.server'].connect()
-            
-            if conn.User(login,password).authenticate():
-                headers = remember(request, login)
-                return HTTPFound(location=came_from,
-                                 headers=headers)
-            message = 'Failed login'
+            with request.registry.settings['ldap.server'].connect() as conn:
+                if conn.User(login,password).authenticate():
+                    headers = remember(request, login)
+                    return HTTPFound(location=came_from,
+                                     headers=headers)
+                message = 'Failed login'
 
         return {
             'name': 'Login',
@@ -68,15 +67,15 @@ class UserwebViews:
     @view_config(route_name='guests', renderer='templates/users.pt', permission='user')
     @view_config(route_name='users', renderer='templates/users.pt', permission='admin')
     def guests(self):
-        conn = self.request.registry.settings['ldap.server'].connect()
-        users = []
-        if self.request.matched_route.name == 'users':
-            users = usermanagement.group.Group.Users(conn).get_users()
-            name = 'Users'
-        else:
-            users = usermanagement.group.Group.Guests(conn).get_users()
-            name = 'Guests'
-        user_sort = lambda x: x.uid
+        with self.request.registry.settings['ldap.server'].connect() as conn:
+            users = []
+            if self.request.matched_route.name == 'users':
+                users = usermanagement.group.Group.Users(conn).get_users()
+                name = 'Users'
+            else:
+                users = usermanagement.group.Group.Guests(conn).get_users()
+                name = 'Guests'
+            user_sort = lambda x: x.uid
         return {
             'name': name,
             'users': sorted(users, key=user_sort),
@@ -86,9 +85,10 @@ class UserwebViews:
     def _system_add_user(self, uid, full_name, user_password, primary_group, secondary_groups):
         settings = self.request.registry.settings
         with settings['ldap.server'].connect(settings['ldap.user'], settings['ldap.password']) as conn:
-            print(conn.user.uid)
             if primary_group is None:
                 primary_group = usermanagement.group.Group.Guests(conn)
+            else:
+                primary_group = conn.Group(conn, gid=primary_group)
             secondary_groups = [conn.Group(gid=x) for x in secondary_groups]
             new_user = usermanagement.user.User.add(conn, uid, full_name, user_password, primary_group, secondary_groups)
 
@@ -96,45 +96,46 @@ class UserwebViews:
     @view_config(route_name='add_user', renderer='templates/add_user.pt', permission='admin')
     def add_user(self):
         request = self.request
-        conn = request.registry.settings['ldap.server'].connect()
-        adding_full_user = request.matched_route.name == 'add_user'
-        if adding_full_user:
-            groups = usermanagement.group.Group.Groups(conn)
-            name = 'Add User'
-        else:
-            groups = []
-            name = 'Add Guest'
-
-        add_url = request.url
-        referrer = request.url
-        if referrer == add_url:
-            referrer = '/'  # never use login form itself as came_from
-        added = False
-        user_id = None
-        user_name = None
-        user_password = None
-        auth_password = None
-        message = None
-        if 'form.submitted' in request.params:
+        with request.registry.settings['ldap.server'].connect() as conn:
+            adding_full_user = request.matched_route.name == 'add_user'
             if adding_full_user:
-                primary_group = conn.Group(gid=request.params['user_primary_group'])
-                secondary_groups = request.params.getall('user_secondary_groups')
+                groups = usermanagement.group.Group.Groups(conn)
+                name = 'Add User'
             else:
-                primary_group = None
-                secondary_groups = []
-            uid = request.params['user_id']
-            full_name = request.params['user_name']
-            user_password = request.params['user_password']
-            if conn.User(request.authenticated_userid, request.params['auth_password']).authenticate():
-                new_user = self._system_add_user(uid, full_name, user_password, primary_group, secondary_groups)
-                message = "%(uid)s added" % {'uid':uid}
-                added = True
-            else:
-                message = "Authentication Failed"
+                groups = []
+                name = 'Add Guest'
+
+            add_url = request.url
+            added = False
+            user_id = None
+            user_name = None
+            user_password = None
+            auth_password = None
+            message = None
+            primary_group = None
+            secondary_groups = []
+            if 'form.submitted' in request.params:
+                if adding_full_user:
+                    primary_group = request.params['user_primary_group']
+                    secondary_groups = request.params.getall('user_secondary_groups')
+                else:
+                    primary_group = None
+                    secondary_groups = []
+                user_id = request.params['user_id']
+                user_name = request.params['user_name']
+                user_password = request.params['user_password']
+                if conn.User(request.authenticated_userid, request.params['auth_password']).authenticate():
+                    new_user = self._system_add_user(user_id, user_name, user_password, primary_group, secondary_groups)
+                    message = "%(uid)s added" % {'uid':user_id}
+                    added = True
+                else:
+                    message = "Authentication Failed"
         return {
             'name': name,
             'message': message,
             'groups': groups,
+            'primary_group': primary_group,
+            'secondary_groups': secondary_groups,
             'added': added,
             'url': add_url,
             'user_id': user_id,
@@ -144,104 +145,104 @@ class UserwebViews:
             'permission': self.permission(),
         }
 
+    @view_config(route_name='change_groups', renderer='templates/change_groups.pt', permission='admin')
+    def change_groups(self):
+        request = self.request
+        with request.registry.settings['ldap.server'].connect() as conn:
+            message = None
+            changed = False
+            auth_password = None
+
+            groups = usermanagement.group.Group.Groups(conn)
+            user_id = request.matchdict['uid']
+            user = conn.User(user_id)
+            user_groups = user.get_groups()
+            primary_group = user_groups['primary'].gid
+            secondary_groups = [x.gid for x in user_groups['secondary']]
+            name = "Change groups for %(uid)s" % {'uid':user_id}
+            if 'form.submitted' in request.params:
+                if conn.User(request.authenticated_userid, request.params['auth_password']).authenticate():
+                    primary_group = request.params['user_primary_group']
+                    secondary_groups = request.params.getall('user_secondary_groups')
+                    user.update_groups(primary=conn.Group(gid=primary_group), secondary=[conn.Group(gid=x) for x in secondary_groups])
+                    message = "%(uid)s's group membership changed" % {'uid':user_id}
+                    changed = True
+                else:
+                    message = "Authentication Failed"
+        return{
+            'name': name,
+            'message': message,
+            'changed': changed,
+            'url': request.url,
+            'groups': groups,
+            'primary_group': primary_group,
+            'secondary_groups': secondary_groups,
+            'auth_password': auth_password,
+            'permission': self.permission(),
+        }
+
     
     @view_config(route_name='change_password', renderer='templates/change_pw.pt', permission='authed')
+    @view_config(route_name='reset_password', renderer='templates/change_pw.pt', permission='user')
     def change_pw(self):
-        uid = self.request.authenticated_userid
         request = self.request
-        change_url = request.route_url('change_password',uid=uid)
-        referrer = request.url
-        if referrer == change_url:
-            referrer = '/'  # never use login form itself as came_from
-        came_from = request.params.get('came_from', referrer)
+        if request.matched_route.name == 'reset_password':
+            uid = request.matchdict['uid']
+            title = 'Reset password for %(uid)s' % {'uid':uid}
+        else:
+            uid = request.authenticated_userid
+            title = 'Change account password'
+        change_url = request.route_url(request.matched_route.name,uid=uid)
         message = ''
         password = ''
+        changed = False
         if 'form.submitted' in request.params:
-            conn = request.registry.settings['ldap.server'].connect()
-            new_pw = request.params['new_password']
-            if new_pw!= request.params['new_password']:
-                message = 'New passwords do not match'
-            elif conn.User(request.authenticated_userid, request.params['auth_password']).authenticate():
-                conn.User(uid).update_password(new_pw)
-                message = "Password for %(uid)s reset" % {'uid':uid}
-            else:
-                message = "Failed Authentication or Insufficent Permissions"
+            with request.registry.settings['ldap.server'].connect() as conn:
+                new_pw = request.params['new_password']
+                if new_pw!= request.params['new_password']:
+                    message = 'New passwords do not match'
+                elif conn.User(request.authenticated_userid, request.params['auth_password']).authenticate():
+                    conn.User(uid).update_password(new_pw)
+                    message = "Password for %(uid)s reset" % {'uid':uid}
+                    changed = True
+                else:
+                    message = "Failed Authentication or Insufficent Permissions"
 
         return {
-            'title': 'Change password for %(uid)s' % {'uid':uid},
+            'title': title,
             'message': message,
             'url': change_url,
-            'came_from': came_from,
+            'changed': changed,
             'new_password': password,
             'confirm_password': password,
             'auth_password': password,
             'permission': self.permission(),
         }
-
-        
-    @view_config(route_name='reset_password', renderer='templates/change_pw.pt', permission='user')
-    def reset_pw(self):
-        uid = self.request.matchdict['uid']
-        request = self.request
-        reset_url = request.route_url('reset_password',uid=uid)
-        referrer = request.url
-        if referrer == reset_url:
-            referrer = '/'  # never use login form itself as came_from
-        came_from = request.params.get('came_from', referrer)
-        message = ''
-        password = ''
-        if 'form.submitted' in request.params:
-            conn = request.registry.settings['ldap.server'].connect()
-            new_pw = request.params['new_password']
-            if new_pw!= request.params['confirm_password']:
-                message = 'New passwords do not match'
-            elif conn.User(request.authenticated_userid, request.params['auth_password']).authenticate():
-                conn.User(uid).update_password(new_pw)
-                message = "Password for %(uid)s reset" % {'uid':uid}
-            else:
-                message = "Failed Authentication or Insufficent Permissions"
-
-        return {
-            'title': 'Change password for %(uid)s' % {'uid':uid},
-            'message': message,
-            'url': reset_url,
-            'came_from': came_from,
-            'new_password': password,
-            'confirm_password': password,
-            'auth_password': password,
-            'permission': self.permission(),
-        }
-
 
     @view_config(route_name='remove_user', renderer='templates/remove_user.pt', permission='user')
     def remove_user(self):
         uid = self.request.matchdict['uid']
         request = self.request
         remove_url = request.route_url('remove_user',uid=uid)
-        referrer = request.url
-        if referrer == remove_url:
-            referrer = '/'  # never use login form itself as came_from
-        came_from = request.params.get('came_from', referrer)
         message = ''
         password = ''
         deleted = False
         if 'form.submitted' in request.params:
-            conn = request.registry.settings['ldap.server'].connect()
-            conf_user = request.params['confirm_user']
-            if conf_user != uid:
-                message = 'username entered does not match user to be deleted'
-            elif conn.User(request.authenticated_userid, request.params['auth_password']).authenticate():
-                conn.User(uid).delete()
-                message = "%(uid)s deleted" % {'uid':uid}
-                deleted = True
-            else:
-                message = "Failed Authentication or Insufficent Permissions"
+            with request.registry.settings['ldap.server'].connect() as conn:
+                conf_user = request.params['confirm_user']
+                if conf_user != uid:
+                    message = 'username entered does not match user to be deleted'
+                elif conn.User(request.authenticated_userid, request.params['auth_password']).authenticate():
+                    conn.User(uid).delete()
+                    message = "%(uid)s deleted" % {'uid':uid}
+                    deleted = True
+                else:
+                    message = "Failed Authentication or Insufficent Permissions"
 
         return {
             'title': 'Are you sure you want to delete the user:  %(uid)s' % {'uid':uid},
             'message': message,
             'url': remove_url,
-            'came_from': came_from,
             'confirm_user': '',
             'auth_password': password,
             'deleted': deleted,

@@ -8,9 +8,7 @@
 <h1>${title}</h1>
 <span tal:replace="message"/>
 
-<form action="${url}" method="post">
-    <input type="hidden" name="came_from"
-           value="${came_from}"/>
+<form tal:condition="changed==False" action="${url}" method="post">
     <label for="new_password">New Password</label>
     <input type="password" id="new_password"
            name="new_password"

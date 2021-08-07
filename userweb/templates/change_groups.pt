@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>${title}</title>
+    <title>${name}</title>
 </head>
 <body>
 <div metal:use-macro='load:nav.pt'></div>
-<h1>${title}</h1>
-<span tal:replace="message"/>
 
-<form tal:condition="deleted == False" action="${url}" method="post">
-    <label for="confirm_user">Confirm User to Delete</label>
-    <input type="user" id="confirm_user"
-           name="confirm_user"
-           value="${confirm_user}"/><br/>
+<h1>${name}:</h1>
+<div>${message}</div>
 
+<form tal:condition="changed==False" action="${url}" method="post">
+    <div tal:omit-tag tal:condition="permission['admin'] and groups">
+        <div metal:use-macro='load:group_select.pt'></div>
+
+    </div>
     <label for="auth_password">Authentication Password</label>
     <input type="password" id="auth_password"
            name="auth_password"
            value="${auth_password}"/><br/>
     <input type="submit" name="form.submitted"
-           value="Delete User"/>
+           value="Change user groups"/>
 </form>
 </body>
 </html>

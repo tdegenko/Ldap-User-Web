@@ -27,21 +27,7 @@
            value="${user_password}"/><br/>
 
     <div tal:omit-tag tal:condition="permission['admin'] and groups">
-
-    <label for="user_primary_group">Primary Group</label>
-    <select name="user_primary_group" id="user_primary_group">
-        <div tal:omit-tag tal:repeat="group groups">
-            <option value="None" tal:attributes="value group.gid" tal:content="group.cn"/>
-        </div>
-    </select>
-    <br/>
-    <label for="user_secondary_group">Secondary Groups</label>
-    <select name="user_secondary_groups" id="user_secondary_groups" multiple>
-        <div tal:omit-tag tal:repeat="group groups">
-            <option value="None" tal:attributes="value group.gid" tal:content="group.cn"/>
-        </div>
-    </select>
-    <br/>
+        <div metal:use-macro='load:group_select.pt'></div>
 
     </div>
     <label for="auth_password">Authentication Password</label>

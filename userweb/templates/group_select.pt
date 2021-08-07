@@ -1,0 +1,16 @@
+<div tal:omit-tag tal:define="groups python:sorted(groups, key=lambda x: x.cn)">
+<label for="user_primary_group">Primary Group</label>
+<select name="user_primary_group" id="user_primary_group">
+    <div tal:omit-tag tal:repeat="group groups">
+        <option value="None" tal:attributes="value group.gid; selected python:True if group.gid==primary_group else None" tal:content="group.cn"/>
+    </div>
+</select>
+<br/>
+<label for="user_secondary_group">Secondary Groups</label>
+<select name="user_secondary_groups" id="user_secondary_groups" multiple>
+    <div tal:omit-tag tal:repeat="group groups">
+        <option value="None" tal:attributes="value group.gid; selected python:True if group.gid in secondary_groups else None"  tal:content="group.cn"/>
+    </div>
+</select>
+<br/>
+</div>
