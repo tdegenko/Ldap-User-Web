@@ -8,6 +8,9 @@
     <li tal:condition="permission['admin']">
         <a href="${request.route_url('users')}">Users</a>
     </li>
+    <li tal:condition="permission['admin']">
+        <a href="${request.route_url('computers')}">Computers</a>
+    </li>
     <li>
         <a tal:condition="view.logged_in is None"
                 href="${request.route_url('login')}">Log In</a>

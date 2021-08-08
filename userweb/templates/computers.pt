@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>${name}</title>
+</head>
+<body>
+<div metal:use-macro='load:nav.pt'></div>
+
+<h1>${name}:</h1>
+<ul>
+<li tal:repeat="computer computers">
+    <span tal:replace="computer.uid" />
+    <a href="${request.route_url('reset_computer_password',uid=computer.uid)}">reset password</a>
+    <a tal:condition="permission['admin']" href="${request.route_url('remove_computer',uid=computer.uid)}">remove</a>
+</li>
+</ul>
+<a tal:condition="permission['admin']" href="${request.route_url('add_computer')}">New Computer</a>
+</body>
+</html>

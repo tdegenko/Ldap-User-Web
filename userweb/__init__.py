@@ -29,6 +29,11 @@ def main(global_config, **settings):
     config.add_route('reset_password', '/user/{uid}/reset_pw')
     config.add_route('change_password', '/user/change_pw')
     config.add_route('change_groups', '/user/{uid}/change_groups')
+
+    config.add_route('computers', '/computers')
+    config.add_route('add_computer', '/computer/add')
+    config.add_route('remove_computer', '/computer/{uid}/remove')
+    config.add_route('reset_computer_password', '/computer/{uid}/reset_pw')
     config.add_route('logout', '/logout')
     config.add_settings({
         'ldap.server':usermanagement.LDAP.LDAPServer(settings['ldap.url'],settings['ldap.base'])

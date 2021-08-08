@@ -10,8 +10,7 @@ from pyramid.view import (
     view_defaults,
     forbidden_view_config,
     )
-import usermanagement.group
-import usermanagement.user
+import usermanagement
 
 
 @view_defaults(renderer='templates/home.pt')
@@ -66,18 +65,21 @@ class UserwebViews:
 
     @view_config(route_name='guests', renderer='templates/users.pt', permission='user')
     @view_config(route_name='users', renderer='templates/users.pt', permission='admin')
-    def guests(self):
+    def users(self):
         with self.request.registry.settings['ldap.server'].connect() as conn:
             users = []
             if self.request.matched_route.name == 'users':
-                users = usermanagement.group.Group.Users(conn).get_users()
+                users = usermanagement.Group.Users(conn).get_users()
                 name = 'Users'
+                add_route = self.request.route_url('add_user')
             else:
-                users = usermanagement.group.Group.Guests(conn).get_users()
+                users = usermanagement.Group.Guests(conn).get_users()
                 name = 'Guests'
+                add_route = self.request.route_url('add_guest')
             user_sort = lambda x: x.uid
         return {
             'name': name,
+            'add_route': add_route,
             'users': sorted(users, key=user_sort),
             'permission': self.permission(),
         }
@@ -86,11 +88,11 @@ class UserwebViews:
         settings = self.request.registry.settings
         with settings['ldap.server'].connect(settings['ldap.user'], settings['ldap.password']) as conn:
             if primary_group is None:
-                primary_group = usermanagement.group.Group.Guests(conn)
+                primary_group = usermanagement.Group.Guests(conn)
             else:
-                primary_group = conn.Group(conn, gid=primary_group)
+                primary_group = conn.Group(gid=primary_group)
             secondary_groups = [conn.Group(gid=x) for x in secondary_groups]
-            new_user = usermanagement.user.User.add(conn, uid, full_name, user_password, primary_group, secondary_groups)
+            new_user = usermanagement.User.add(conn, uid, full_name, user_password, primary_group, secondary_groups)
 
     @view_config(route_name='add_guest', renderer='templates/add_user.pt', permission='user')
     @view_config(route_name='add_user', renderer='templates/add_user.pt', permission='admin')
@@ -99,7 +101,7 @@ class UserwebViews:
         with request.registry.settings['ldap.server'].connect() as conn:
             adding_full_user = request.matched_route.name == 'add_user'
             if adding_full_user:
-                groups = usermanagement.group.Group.Groups(conn)
+                groups = usermanagement.Group.Groups(conn)
                 name = 'Add User'
             else:
                 groups = []
@@ -122,7 +124,7 @@ class UserwebViews:
                     primary_group = None
                     secondary_groups = []
                 user_id = request.params['user_id']
-                user_name = request.params['user_name']
+                user_name = request.params['user_name'].split(maxsplit=1)
                 user_password = request.params['user_password']
                 if conn.User(request.authenticated_userid, request.params['auth_password']).authenticate():
                     new_user = self._system_add_user(user_id, user_name, user_password, primary_group, secondary_groups)
@@ -153,7 +155,7 @@ class UserwebViews:
             changed = False
             auth_password = None
 
-            groups = usermanagement.group.Group.Groups(conn)
+            groups = usermanagement.Group.Groups(conn)
             user_id = request.matchdict['uid']
             user = conn.User(user_id)
             user_groups = user.get_groups()
@@ -184,11 +186,17 @@ class UserwebViews:
     
     @view_config(route_name='change_password', renderer='templates/change_pw.pt', permission='authed')
     @view_config(route_name='reset_password', renderer='templates/change_pw.pt', permission='user')
+    @view_config(route_name='reset_computer_password', renderer='templates/change_pw.pt', permission='admin')
     def change_pw(self):
         request = self.request
+        computer = False
         if request.matched_route.name == 'reset_password':
             uid = request.matchdict['uid']
             title = 'Reset password for %(uid)s' % {'uid':uid}
+        if request.matched_route.name == 'reset_computer_password':
+            uid = request.matchdict['uid']
+            title = 'Reset password for %(uid)s' % {'uid':uid}
+            computer = True
         else:
             uid = request.authenticated_userid
             title = 'Change account password'
@@ -202,7 +210,10 @@ class UserwebViews:
                 if new_pw!= request.params['new_password']:
                     message = 'New passwords do not match'
                 elif conn.User(request.authenticated_userid, request.params['auth_password']).authenticate():
-                    conn.User(uid).update_password(new_pw)
+                    if computer:
+                        conn.Computer(uid).update_password(new_pw)
+                    else:
+                        conn.User(uid).update_password(new_pw)
                     message = "Password for %(uid)s reset" % {'uid':uid}
                     changed = True
                 else:
@@ -246,6 +257,18 @@ class UserwebViews:
             'confirm_user': '',
             'auth_password': password,
             'deleted': deleted,
+            'permission': self.permission(),
+        }
+
+    @view_config(route_name='computers', renderer='templates/computers.pt', permission='admin')
+    def computers(self):
+        with self.request.registry.settings['ldap.server'].connect() as conn:
+            computers = usermanagement.Computer.all(conn)
+            name = 'Computers'
+            computer_sort = lambda x: x.uid
+        return {
+            'name': name,
+            'computers': sorted(computers, key=computer_sort),
             'permission': self.permission(),
         }
 

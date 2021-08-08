@@ -15,5 +15,6 @@
     <a tal:condition="permission['admin']" href="${request.route_url('change_groups',uid=user.uid)}">change groups</a>
 </li>
 </ul>
+<a tal:condition="permission['admin']" href="${add_route}">New ${name}</a>
 </body>
 </html>
