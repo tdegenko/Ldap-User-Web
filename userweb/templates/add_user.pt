@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <title>${name}</title>
-</head>
+<div metal:use-macro='load:head.pt'></div>
 <body>
 <div metal:use-macro='load:nav.pt'></div>
 
-<h1>${name}:</h1>
+<h1>${title}:</h1>
 <div>${message}</div>
 
 <form tal:condition="added==False" action="${url}" method="post">

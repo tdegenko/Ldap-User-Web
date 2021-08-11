@@ -1,0 +1,4 @@
+<head>
+    <title>UserWeb: ${title}</title>
+    <link rel="stylesheet" href="${request.static_url('userweb:static/app.css') }"/>
+</head>

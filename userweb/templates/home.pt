@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <title>User Overview: ${uid}</title>
-</head>
+<div metal:use-macro='load:head.pt'></div>
 <body>
 <div metal:use-macro='load:nav.pt'></div>
 

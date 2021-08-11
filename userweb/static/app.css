@@ -1,0 +1,43 @@
+div.navbar{
+}
+
+div.navbar ol{
+	grid-template-columns: repeat(5,1fr);
+	gap: 0.24em;
+	display: grid;
+    padding: 0px;
+    border-bottom: solid 0.5ex;
+}
+
+div.navbar li{
+    display: inline-block;
+}
+
+div.navbar li a{
+    display: block;
+    background-color: lightgrey;
+    padding: 1.5ex 1em 1ex 1em;
+    text-decoration: none;
+    color: black;
+    border-top: solid 1ex white;
+}
+div.navbar li a:hover, div.navbar li a:focus{
+    background: grey;
+    border-top-color: black;
+}
+div.navbar li a.selected{
+    border-top-color: darkgrey;
+}
+
+form{
+	grid-template-columns: 15em 1fr;
+	gap: 0.24em;
+	display: grid;
+    width: 60em;
+}
+form label{
+    grid-column: 1;
+}
+form input, select{
+    grid-column: 2;
+}

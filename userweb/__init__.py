@@ -35,6 +35,7 @@ def main(global_config, **settings):
     config.add_route('remove_computer', '/computer/{uid}/remove')
     config.add_route('reset_computer_password', '/computer/{uid}/reset_pw')
     config.add_route('logout', '/logout')
+    config.add_static_view(name='static', path='userweb:static')
     config.add_settings({
         'ldap.server':usermanagement.LDAP.LDAPServer(settings['ldap.url'],settings['ldap.base'])
     })

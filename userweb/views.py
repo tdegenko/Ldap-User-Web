@@ -28,6 +28,7 @@ class UserwebViews:
     @view_config(route_name='home', permission='authed')
     def home(self):
         return {
+            'title': 'Home',
             'uid': self.request.authenticated_userid,
             'permission': self.permission(),
         }
@@ -55,7 +56,7 @@ class UserwebViews:
                 message = 'Failed login'
 
         return {
-            'name': 'Login',
+            'title': 'Login',
             'message': message,
             'url': request.application_url + '/login',
             'came_from': came_from,
@@ -70,15 +71,15 @@ class UserwebViews:
             users = []
             if self.request.matched_route.name == 'users':
                 users = usermanagement.Group.Users(conn).get_users()
-                name = 'Users'
+                title = 'Users'
                 add_route = self.request.route_url('add_user')
             else:
                 users = usermanagement.Group.Guests(conn).get_users()
-                name = 'Guests'
+                title = 'Guests'
                 add_route = self.request.route_url('add_guest')
             user_sort = lambda x: x.uid
         return {
-            'name': name,
+            'title': title,
             'add_route': add_route,
             'users': sorted(users, key=user_sort),
             'permission': self.permission(),
@@ -102,10 +103,10 @@ class UserwebViews:
             adding_full_user = request.matched_route.name == 'add_user'
             if adding_full_user:
                 groups = usermanagement.Group.Groups(conn)
-                name = 'Add User'
+                title = 'Add User'
             else:
                 groups = []
-                name = 'Add Guest'
+                title = 'Add Guest'
 
             add_url = request.url
             added = False
@@ -133,7 +134,7 @@ class UserwebViews:
                 else:
                     message = "Authentication Failed"
         return {
-            'name': name,
+            'title': title,
             'message': message,
             'groups': groups,
             'primary_group': primary_group,
@@ -161,7 +162,7 @@ class UserwebViews:
             user_groups = user.get_groups()
             primary_group = user_groups['primary'].gid
             secondary_groups = [x.gid for x in user_groups['secondary']]
-            name = "Change groups for %(uid)s" % {'uid':user_id}
+            title = "Change groups for %(uid)s" % {'uid':user_id}
             if 'form.submitted' in request.params:
                 if conn.User(request.authenticated_userid, request.params['auth_password']).authenticate():
                     primary_group = request.params['user_primary_group']
@@ -172,7 +173,7 @@ class UserwebViews:
                 else:
                     message = "Authentication Failed"
         return{
-            'name': name,
+            'title': title,
             'message': message,
             'changed': changed,
             'url': request.url,
@@ -264,10 +265,10 @@ class UserwebViews:
     def computers(self):
         with self.request.registry.settings['ldap.server'].connect() as conn:
             computers = usermanagement.Computer.all(conn)
-            name = 'Computers'
+            title = 'Computers'
             computer_sort = lambda x: x.uid
         return {
-            'name': name,
+            'title': title,
             'computers': sorted(computers, key=computer_sort),
             'permission': self.permission(),
         }
