@@ -1,18 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <title>${title}</title>
-</head>
+<div metal:use-macro='load:head.pt'></div>
 <body>
 <div metal:use-macro='load:nav.pt'></div>
 <h1>${title}</h1>
 <span tal:replace="message"/>
 
 <form tal:condition="deleted == False" action="${url}" method="post">
-    <label for="confirm_user">Confirm User to Delete</label>
-    <input type="user" id="confirm_user"
-           name="confirm_user"
-           value="${confirm_user}"/><br/>
+    <label for="confirm_uid">Confirm ${object_type.capitalize()} to Delete</label>
+    <input type="user" id="confirm_uid"
+           name="confirm_uid"
+           value="${confirm_uid}"/><br/>
 
     <label for="auth_password">Authentication Password</label>
     <input type="password" id="auth_password"

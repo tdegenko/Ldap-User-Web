@@ -231,31 +231,37 @@ class UserwebViews:
             'permission': self.permission(),
         }
 
-    @view_config(route_name='remove_user', renderer='templates/remove_user.pt', permission='user')
+    @view_config(route_name='remove_user', renderer='templates/remove.pt', permission='user')
+    @view_config(route_name='remove_computer', renderer='templates/remove.pt', permission='admin')
     def remove_user(self):
         uid = self.request.matchdict['uid']
         request = self.request
-        remove_url = request.route_url('remove_user',uid=uid)
+        remove_url = request.url
+        object_type = 'computer' if  self.request.matched_route.name == 'remove_computer' else 'user'
         message = ''
         password = ''
         deleted = False
         if 'form.submitted' in request.params:
             with request.registry.settings['ldap.server'].connect() as conn:
-                conf_user = request.params['confirm_user']
-                if conf_user != uid:
-                    message = 'username entered does not match user to be deleted'
+                conf_uid = request.params['confirm_uid']
+                if conf_uid!= uid:
+                    message = 'UID entered does not match %(object_type)s to be deleted' % {'object_type': object_type}
                 elif conn.User(request.authenticated_userid, request.params['auth_password']).authenticate():
-                    conn.User(uid).delete()
+                    if object_type == 'computer':
+                        conn.Computer(uid).delete()
+                    else:
+                        conn.User(uid).delete()
                     message = "%(uid)s deleted" % {'uid':uid}
                     deleted = True
                 else:
                     message = "Failed Authentication or Insufficent Permissions"
 
         return {
-            'title': 'Are you sure you want to delete the user:  %(uid)s' % {'uid':uid},
+            'title': 'Are you sure you want to delete the %(object_type)s:  %(uid)s' % {'object_type': object_type, 'uid':uid},
             'message': message,
             'url': remove_url,
-            'confirm_user': '',
+            'confirm_uid': '',
+            'object_type': object_type,
             'auth_password': password,
             'deleted': deleted,
             'permission': self.permission(),
@@ -270,6 +276,37 @@ class UserwebViews:
         return {
             'title': title,
             'computers': sorted(computers, key=computer_sort),
+            'permission': self.permission(),
+        }
+
+    @view_config(route_name='add_computer', renderer='templates/add_computer.pt', permission='admin')
+    def add_computer(self):
+        request = self.request
+        with request.registry.settings['ldap.server'].connect() as conn:
+            title = 'Add Computer'
+            add_url = request.url
+            added = False
+            computer_id = None
+            computer_password = None
+            auth_password = None
+            message = None
+            if 'form.submitted' in request.params:
+                computer_id = request.params['computer_id']
+                computer_password = request.params['computer_password']
+                if conn.User(request.authenticated_userid, request.params['auth_password']).authenticate():
+                    new_user = usermanagement.Computer.add(conn, computer_id, computer_password)
+                    message = "%(uid)s added" % {'uid':computer_id}
+                    added = True
+                else:
+                    message = "Authentication Failed"
+        return {
+            'title': title,
+            'message': message,
+            'added': added,
+            'url': add_url,
+            'computer_id': computer_id,
+            'computer_password': computer_password,
+            'auth_password': auth_password,
             'permission': self.permission(),
         }
 
