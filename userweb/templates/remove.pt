@@ -8,7 +8,7 @@
 
 <form tal:condition="deleted == False" action="${url}" method="post">
     <label for="confirm_uid">Confirm ${object_type.capitalize()} to Delete</label>
-    <input type="user" id="confirm_uid"
+    <input type="text" id="confirm_uid"
            name="confirm_uid"
            value="${confirm_uid}"/><br/>
 
@@ -16,7 +16,7 @@
     <input type="password" id="auth_password"
            name="auth_password"
            value="${auth_password}"/><br/>
-    <input type="submit" name="form.submitted"
+    <input class="button" type="submit" name="form.submitted"
            value="Delete User"/>
 </form>
 </body>

@@ -41,3 +41,36 @@ form label{
 form input, select{
     grid-column: 2;
 }
+
+form input[type=password], form input[type=text]{
+    border-radius: 0.5ex;
+    border: solid black 1px;
+    padding: 1ex 1em;
+}
+
+ul.obj_list {
+    max-width: 60em;
+}
+ul.obj_list li{
+    overflow: auto;
+    margin: 0.25ex;
+}
+ul.obj_list li div.buttons{
+    float: inline-end;
+}
+ul.obj_list li:nth-child(odd){
+    background-color: whitesmoke;
+}
+.button{
+    display: inline-block;
+    background-color: lightgrey;
+    padding: 1ex 1em;
+    text-decoration: none;
+    color: black;
+    border: solid 1px black;
+    border-radius: 0.5ex;
+	margin: 0.25ex 0ex;
+}
+.button:hover, button:focus{
+    background-color: grey;
+}

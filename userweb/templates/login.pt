@@ -16,7 +16,7 @@
     <input type="password" id="password"
            name="password"
            value="${password}"/><br/>
-    <input type="submit" name="form.submitted"
+    <input class="button" type="submit" name="form.submitted"
            value="Log In"/>
 </form>
 </body>

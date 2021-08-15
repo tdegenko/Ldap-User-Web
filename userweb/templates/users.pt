@@ -5,14 +5,16 @@
 <div metal:use-macro='load:nav.pt'></div>
 
 <h1>${title}:</h1>
-<ul>
+<ul  class="obj_list">
 <li tal:repeat="user users">
     <span tal:replace="user.uid" />
-    <a href="${request.route_url('reset_password',uid=user.uid)}">reset password</a>
-    <a tal:condition="permission['admin']" href="${request.route_url('remove_user',uid=user.uid)}">remove</a>
-    <a tal:condition="permission['admin']" href="${request.route_url('change_groups',uid=user.uid)}">change groups</a>
+    <div class="buttons">
+        <a class="button" href="${request.route_url('reset_password',uid=user.uid)}">reset password</a>
+        <a class="button" tal:condition="permission['admin']" href="${request.route_url('remove_user',uid=user.uid)}">remove</a>
+        <a class="button" tal:condition="permission['admin']" href="${request.route_url('change_groups',uid=user.uid)}">change groups</a>
+    </div>
 </li>
 </ul>
-<a tal:condition="permission['admin']" href="${add_route}">New ${title}</a>
+<a class="button" tal:condition="permission['admin']" href="${add_route}">New ${title}</a>
 </body>
 </html>

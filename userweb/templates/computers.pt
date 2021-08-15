@@ -5,13 +5,15 @@
 <div metal:use-macro='load:nav.pt'></div>
 
 <h1>${title}:</h1>
-<ul>
+<ul class="obj_list">
 <li tal:repeat="computer computers">
     <span tal:replace="computer.uid" />
-    <a href="${request.route_url('reset_computer_password',uid=computer.uid)}">reset password</a>
-    <a tal:condition="permission['admin']" href="${request.route_url('remove_computer',uid=computer.uid)}">remove</a>
+    <div class="buttons">
+        <a class="button" href="${request.route_url('reset_computer_password',uid=computer.uid)}">reset password</a>
+        <a class="button" tal:condition="permission['admin']" href="${request.route_url('remove_computer',uid=computer.uid)}">remove</a>
+    </div>
 </li>
 </ul>
-<a tal:condition="permission['admin']" href="${request.route_url('add_computer')}">New Computer</a>
+<a class="button" tal:condition="permission['admin']" href="${request.route_url('add_computer')}">New Computer</a>
 </body>
 </html>

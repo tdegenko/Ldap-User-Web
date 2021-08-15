@@ -16,7 +16,7 @@
     <input type="password" id="auth_password"
            name="auth_password"
            value="${auth_password}"/><br/>
-    <input type="submit" name="form.submitted"
+    <input class="button" type="submit" name="form.submitted"
            value="Change user groups"/>
 </form>
 </body>

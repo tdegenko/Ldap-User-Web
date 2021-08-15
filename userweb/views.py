@@ -74,7 +74,7 @@ class UserwebViews:
                 title = 'Users'
                 add_route = self.request.route_url('add_user')
             else:
-                users = usermanagement.Group.Guests(conn).get_users()
+                users = filter(lambda u: u.uid != 'nobody', usermanagement.Group.Guests(conn).get_users())
                 title = 'Guests'
                 add_route = self.request.route_url('add_guest')
             user_sort = lambda x: x.uid
