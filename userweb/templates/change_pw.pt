@@ -2,6 +2,13 @@
 <html lang="en">
 <div metal:use-macro='load:head.pt'></div>
 <body>
+<script
+    src="${request.static_url('userweb:static/lists/eff.js') }"
+></script>
+
+<script
+    src="${request.static_url('userweb:static/diceware.js')}"
+></script>
 <div metal:use-macro='load:nav.pt'></div>
 <h1>${title}</h1>
 <span tal:replace="message"/>
