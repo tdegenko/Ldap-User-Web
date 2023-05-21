@@ -4,7 +4,7 @@
 <body>
 <div metal:use-macro='load:nav.pt'></div>
 <h1>${title}</h1>
-<span tal:replace="message"/>
+<div metal:use-macro='load:messages.pt'></div>
 
 <form tal:condition="deleted == False" action="${url}" method="post">
     <label for="confirm_uid">Confirm ${object_type.capitalize()} to Delete</label>
