@@ -3,7 +3,7 @@
 <div metal:use-macro='load:head.pt'></div>
 <body>
 <h1>Login</h1>
-<span tal:replace="message"/>
+<div metal:use-macro='load:messages.pt'></div>
 
 <form action="${url}" method="post">
     <input type="hidden" name="came_from"

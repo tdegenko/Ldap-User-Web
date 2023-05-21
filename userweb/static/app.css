@@ -3,7 +3,7 @@ div.navbar{
 
 div.navbar ol{
 	grid-template-columns: repeat(5,1fr);
-	gap: 0.24em;
+	gap: 0.1em;
 	display: grid;
     padding: 0px;
     border-bottom: solid 0.5ex;
@@ -19,11 +19,12 @@ div.navbar li a{
     padding: 1.5ex 1em 1ex 1em;
     text-decoration: none;
     color: black;
-    border-top: solid 1ex white;
+    border-radius: 0.5ex 0.5ex 0ex 0ex;
+    border: solid black 1px;
+    border-bottom-width: 0px;
 }
 div.navbar li a:hover, div.navbar li a:focus{
     background: grey;
-    border-top-color: black;
 }
 div.navbar li a.selected{
     border-top-color: darkgrey;
@@ -73,4 +74,26 @@ ul.obj_list li:nth-child(odd){
 }
 .button:hover, button:focus{
     background-color: grey;
+}
+
+.messages {
+    padding: 1em;
+}
+.message {
+    display: block;
+    border-radius: 0.5ex;
+    border-color: black;
+    border-width: 1px;
+    border-style: solid;
+    padding: 0.5ex 2ex;
+    background-color: lightgray;
+    margin: 0.25ex
+}
+.message-error {
+    background-color: lightcoral;
+    border-color: red
+}
+.message-success {
+    background-color: lightseagreen;
+    border-color: green
 }

@@ -16,7 +16,7 @@ class TutorialViewTests(unittest.TestCase):
         request = testing.DummyRequest()
         inst = TutorialViews(request)
         response = inst.home()
-        self.assertEqual('Home View', response['name'])
+        self.assertEqual("Home View", response["name"])
 
     def test_hello(self):
         from .views import TutorialViews
@@ -25,21 +25,22 @@ class TutorialViewTests(unittest.TestCase):
         inst = TutorialViews(request)
         response = inst.hello()
         # Our view now returns data
-        self.assertEqual('Hello View', response['name'])
+        self.assertEqual("Hello View", response["name"])
 
 
 class TutorialFunctionalTests(unittest.TestCase):
     def setUp(self):
         from tutorial import main
+
         app = main({})
         from webtest import TestApp
 
         self.testapp = TestApp(app)
 
     def test_home(self):
-        res = self.testapp.get('/', status=200)
-        self.assertIn(b'<h1>Hi Home View', res.body)
+        res = self.testapp.get("/", status=200)
+        self.assertIn(b"<h1>Hi Home View", res.body)
 
     def test_hello(self):
-        res = self.testapp.get('/howdy', status=200)
-        self.assertIn(b'<h1>Hi Hello View', res.body)
+        res = self.testapp.get("/howdy", status=200)
+        self.assertIn(b"<h1>Hi Hello View", res.body)

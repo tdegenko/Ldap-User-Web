@@ -5,7 +5,7 @@
 <div metal:use-macro='load:nav.pt'></div>
 
 <h1>${title}:</h1>
-<div>${message}</div>
+<div metal:use-macro='load:messages.pt'></div>
 
 <form tal:condition="added==False" action="${url}" method="post">
     <label for="computer_id">Computer Name</label>

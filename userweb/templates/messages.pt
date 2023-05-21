@@ -1,0 +1,3 @@
+<ol class="messages">
+    <li tal:repeat="row messages" class="message message-${row[0]}">${row[1]}</li>
+</ol>

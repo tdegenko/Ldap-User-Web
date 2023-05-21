@@ -5,7 +5,7 @@
 <div metal:use-macro='load:nav.pt'></div>
 
 <h1>${title}:</h1>
-<div>${message}</div>
+<div metal:use-macro='load:messages.pt'></div>
 
 <form tal:condition="changed==False" action="${url}" method="post">
     <div tal:omit-tag tal:condition="permission['admin'] and groups">
