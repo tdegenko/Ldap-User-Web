@@ -137,14 +137,14 @@ class UserwebViews:
                     primary_group = None
                     secondary_groups = []
                 user_id = request.params["user_id"]
-                user_name = request.params["user_name"].split(maxsplit=1)
+                user_name_split = request.params["user_name"].split(maxsplit=1)
                 user_password = request.params["user_password"]
                 if conn.User(
                     request.authenticated_userid, request.params["auth_password"]
                 ).authenticate():
                     new_user = self._system_add_user(
                         user_id,
-                        user_name,
+                        user_name_split,
                         user_password,
                         primary_group,
                         secondary_groups,
