@@ -6,6 +6,7 @@ from .security import groupfinder
 
 import usermanagement.LDAP
 
+from userweb.version import version as __version__
 
 def main(global_config, **settings):
     config = Configurator(settings=settings, root_factory='.resources.Root')
